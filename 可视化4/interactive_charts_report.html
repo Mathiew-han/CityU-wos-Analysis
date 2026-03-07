@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WOS 交互式图表（悬停提示）</title>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <style>
+    :root {{
+      --text: #101828;
+      --sub: #475467;
+      --border: #D0D5DD;
+      --grid: #EAECF0;
+      --bg: #FFFFFF;
+    }}
+    body {{
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.6;
+      padding: 28px 20px;
+    }}
+    .container {{
+      max-width: 980px;
+      margin: 0 auto;
+    }}
+    h1 {{
+      font-size: 20px;
+      margin: 0 0 6px;
+    }}
+    .sub {{
+      color: var(--sub);
+      font-size: 13px;
+      margin: 0 0 18px;
+    }}
+    h2 {{
+      font-size: 16px;
+      margin: 24px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }}
+    figure {{
+      margin: 18px 0 22px;
+      padding: 0;
+    }}
+    figcaption {{
+      font-size: 13px;
+      color: var(--sub);
+      margin-bottom: 6px;
+    }}
+    .plot {{
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #fff;
+    }}
+    .h320 {{ height: 320px; }}
+    .h360 {{ height: 360px; }}
+    .h420 {{ height: 420px; }}
+    @media print {{
+      body {{ padding: 0; }}
+      .plot {{ break-inside: avoid; page-break-inside: avoid; }}
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WOS 交互式图表</h1>
+    <p class="sub">图表由 JavaScript 绘制；悬停显示数值。为避免重叠，每张图单独占位。</p>
+
+    <h2>WOS 基础图表</h2>
+    <figure><figcaption>Publications by Year</figcaption><div id="wos_year" class="plot h320"></div></figure>
+    <figure><figcaption>Research Areas (Top 15)</figcaption><div id="wos_areas" class="plot h420"></div></figure>
+    <figure><figcaption>Countries/Regions (Top 15)</figcaption><div id="wos_countries" class="plot h420"></div></figure>
+    <figure><figcaption>Affiliations (Top 15)</figcaption><div id="wos_affil" class="plot h420"></div></figure>
+    <figure><figcaption>Document Types</figcaption><div id="wos_doc" class="plot h360"></div></figure>
+    <figure><figcaption>Publishers (Top 15)</figcaption><div id="wos_publishers" class="plot h420"></div></figure>
+    <figure><figcaption>Web of Science Categories (Top 15)</figcaption><div id="wos_categories" class="plot h420"></div></figure>
+
+    <h2>作者分析（核心）</h2>
+    <figure><figcaption>Top 20 Authors by Publications</figcaption><div id="a_top20" class="plot h420"></div></figure>
+    <figure><figcaption>Distribution of Publications per Author</figcaption><div id="a_hist" class="plot h320"></div></figure>
+    <figure><figcaption>Cumulative Share of Publications</figcaption><div id="a_cum" class="plot h320"></div></figure>
+    <figure><figcaption>Top 10 Authors Share</figcaption><div id="a_pie" class="plot h360"></div></figure>
+    <figure><figcaption>Teachers by College (with WOS link)</figcaption><div id="a_college" class="plot h420"></div></figure>
+
+    <h2>修正最终分析（核心）</h2>
+    <figure><figcaption>数据统计总览</figcaption><div id="f_overview" class="plot h320"></div></figure>
+    <figure><figcaption>教师WOS覆盖情况</figcaption><div id="f_coverage_pie" class="plot h360"></div></figure>
+    <figure><figcaption>各学院教师分布</figcaption><div id="f_faculty_dist" class="plot h420"></div></figure>
+    <figure><figcaption>各学院WOS覆盖率</figcaption><div id="f_faculty_cov" class="plot h420"></div></figure>
+  </div>
+
+  <script>
+    const DATA = {"wos": {"publications_by_year": {"x": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], "y": [7.0, 15.0, 23.0, 22.0, 49.0, 80.0, 149.0, 168.0, 193.0, 358.0, 758.0, 121.0]}, "research_areas_top15": {"labels": ["BUSINESS ECONOMICS", "SOCIAL SCIENCES OTHER TOPICS", "ENVIRONMENTAL SCIENCES ECOLOGY", "PSYCHOLOGY", "SCIENCE TECHNOLOGY OTHER TOPICS", "EDUCATION EDUCATIONAL RESEARCH", "LINGUISTICS", "PUBLIC ENVIRONMENTAL OCCUPATIONAL\nHEALTH", "COMPUTER SCIENCE", "PUBLIC ADMINISTRATION", "PSYCHIATRY", "ENGINEERING", "URBAN STUDIES", "INFORMATION SCIENCE LIBRARY\nSCIENCE", "ARTS HUMANITIES OTHER TOPICS"], "values": [721.0, 544.0, 271.0, 260.0, 142.0, 130.0, 70.0, 55.0, 50.0, 38.0, 36.0, 35.0, 31.0, 30.0, 26.0]}, "countries_top15": {"labels": ["PEOPLES R CHINA", "USA", "TAIWAN", "ENGLAND", "AUSTRALIA", "CANADA", "JAPAN", "GERMANY", "SINGAPORE", "SOUTH KOREA", "FRANCE", "MALAYSIA", "NETHERLANDS", "SWEDEN", "nan"], "values": [2120.0, 436.0, 135.0, 121.0, 110.0, 82.0, 68.0, 63.0, 61.0, 35.0, 22.0, 22.0, 20.0, 18.0, 17.0]}, "affiliations_top15": {"labels": ["City University of Macau", "Chinese Academy of Sciences", "Zhejiang University", "Sun Yat Sen University", "University of Chinese Academy of\nSciences, CAS", "Peking University", "Shanghai Jiao Tong University", "Fudan University", "Tsinghua University", "Huazhong University of Science &\nTechnology", "Sichuan University", "Central South University", "Shandong University", "Wuhan University", "Xi'an Jiaotong University"], "values": [2121.0, 249.0, 156.0, 129.0, 121.0, 117.0, 115.0, 109.0, 108.0, 105.0, 105.0, 97.0, 97.0, 95.0, 90.0]}, "document_types": {"labels": ["ARTICLE", "EARLY ACCESS", "REVIEW", "MEETING ABSTRACT", "RETRACTED\nPUBLICATION", "BOOK REVIEW", "CORRECTION", "EDITORIAL\nMATERIAL", "PROCEEDINGS\nPAPER", "ITEM WITHDRAWAL", "RETRACTION", "WITHDRAWN\nPUBLICATION"], "values": [1848.0, 261.0, 48.0, 22.0, 19.0, 11.0, 6.0, 6.0, 2.0, 1.0, 1.0, 1.0]}, "publishers_top15": {"labels": ["Elsevier", "Taylor & Francis", "Mdpi", "Springer Nature", "Sage", "Wiley", "Emerald Group Publishing", "Frontiers Media Sa", "Soc Personality Res Inc", "Educational Publishing\nFoundation-American\nPsychological Assoc", "Oxford Univ Press", "Igi Global", "Hindawi Publishing Group", "IEEE", "Asce-Amer Soc Civil\nEngineers"], "values": [629.0, 328.0, 164.0, 163.0, 149.0, 127.0, 109.0, 106.0, 23.0, 14.0, 12.0, 10.0, 9.0, 9.0, 8.0]}, "wos_categories_top15": {"labels": ["HOSPITALITY LEISURE SPORT TOURISM", "ECONOMICS", "ENVIRONMENTAL STUDIES", "MANAGEMENT", "BUSINESS FINANCE", "PSYCHOLOGY MULTIDISCIPLINARY", "BUSINESS", "ENVIRONMENTAL SCIENCES", "GREEN SUSTAINABLE SCIENCE\nTECHNOLOGY", "EDUCATION EDUCATIONAL RESEARCH", "SOCIAL SCIENCES INTERDISCIPLINARY", "LINGUISTICS", "PUBLIC ENVIRONMENTAL OCCUPATIONAL\nHEALTH", "LANGUAGE LINGUISTICS", "PSYCHIATRY"], "values": [462.0, 282.0, 231.0, 221.0, 200.0, 177.0, 164.0, 152.0, 133.0, 129.0, 75.0, 70.0, 55.0, 47.0, 36.0]}}, "authors": {"top20": {"labels": ["Lai, Ivan", "Chien, Fengsheng", "Lee, Chien-Chiang", "Chau, Ka Yin", "LI, Xi", "Aw, Eugene", "Luo, Jian Ming", "Cheung, Adrian (Waikong)", "Lin, Boqiang", "Shen, Huawen", "ZHANG, YUNQIAN", "su, xinwei", "Wong, IpKin Anthony", "Li, Fangxuan", "Shen, Heyong", "Su, Chi Wei", "wenqi, ruan", "Tan Wei Han, Garry", "Tang, YM", "Wu, Xiaohong"], "values": [85.0, 57.0, 57.0, 52.0, 45.0, 44.0, 38.0, 36.0, 34.0, 33.0, 29.0, 28.0, 28.0, 28.0, 25.0, 24.0, 24.0, 23.0, 22.0, 21.0]}, "hist_values": [85.0, 57.0, 57.0, 52.0, 45.0, 44.0, 38.0, 36.0, 34.0, 33.0, 29.0, 28.0, 28.0, 28.0, 25.0, 24.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 19.0, 18.0, 18.0, 18.0, 18.0, 17.0, 17.0, 16.0, 16.0, 16.0, 15.0, 15.0, 14.0, 14.0, 13.0, 13.0, 13.0, 13.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 11.0, 11.0, 11.0, 11.0, 11.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], "cumulative_pct": [3.9756782039289056, 6.641721234798878, 9.30776426566885, 11.739943872778298, 13.84471468662301, 15.902712815715622, 17.680074836295603, 19.363891487371376, 20.95416276894294, 22.497661365762394, 23.854069223573433, 25.16370439663237, 26.4733395696913, 27.782974742750234, 28.952291861552855, 30.07483629560337, 31.197380729653883, 32.27315247895229, 33.302151543498596, 34.284377923292794, 35.219831618334894, 36.10851262862489, 36.99719363891487, 37.83910196445276, 38.681010289990645, 39.52291861552853, 40.36482694106642, 41.1599625818522, 41.95509822263798, 42.70346117867165, 43.45182413470533, 44.20018709073901, 44.90177736202058, 45.60336763330215, 46.25818521983162, 46.913002806361085, 47.52104770813845, 48.12909260991581, 48.73713751169318, 49.34518241347053, 49.90645463049579, 50.46772684752104, 51.02899906454631, 51.59027128157157, 52.15154349859682, 52.71281571562207, 53.22731524789523, 53.74181478016838, 54.25631431244153, 54.77081384471468, 55.285313376987844, 55.75304022450889, 56.22076707202993, 56.688493919550986, 57.15622076707203, 57.62394761459307, 58.09167446211413, 58.55940130963517, 59.02712815715622, 59.44808231992516, 59.869036482694106, 60.28999064546306, 60.71094480823199, 61.13189897100093, 61.55285313376988, 61.973807296538816, 62.394761459307766, 62.81571562207671, 63.236669784845645, 63.657623947614596, 64.07857811038353, 64.49953227315248, 64.92048643592142, 65.34144059869037, 65.7623947614593, 66.18334892422824, 66.60430308699719, 67.02525724976613, 67.44621141253508, 67.82039289055191, 68.19457436856877, 68.56875584658559, 68.94293732460243, 69.31711880261928, 69.6913002806361, 70.06548175865295, 70.43966323666979, 70.81384471468662, 71.18802619270346, 71.5622076707203, 71.93638914873713, 72.31057062675397, 72.68475210477081, 73.05893358278766, 73.43311506080448, 73.76052385406922, 74.08793264733396, 74.4153414405987, 74.74275023386342, 75.07015902712816, 75.39756782039288, 75.72497661365762, 76.05238540692237, 76.37979420018709, 76.70720299345183, 77.03461178671655, 77.36202057998129, 77.68942937324603, 78.01683816651077, 78.34424695977549, 78.67165575304023, 78.99906454630495, 79.32647333956969, 79.65388213283443, 79.93451824134705, 80.21515434985969, 80.49579045837231, 80.77642656688494, 81.05706267539757, 81.3376987839102, 81.61833489242282, 81.89897100093545, 82.17960710944809, 82.46024321796071, 82.74087932647333, 83.02151543498597, 83.3021515434986, 83.58278765201122, 83.86342376052386, 84.14405986903648, 84.4246959775491, 84.70533208606173, 84.98596819457437, 85.26660430308701, 85.54724041159962, 85.82787652011226, 86.10851262862488, 86.38914873713752, 86.66978484565014, 86.90364826941067, 87.13751169317119, 87.37137511693172, 87.60523854069223, 87.83910196445277, 88.07296538821329, 88.3068288119738, 88.54069223573433, 88.77455565949487, 89.00841908325538, 89.2422825070159, 89.47614593077643, 89.71000935453695, 89.94387277829748, 90.177736202058, 90.41159962581851, 90.64546304957905, 90.87932647333957, 91.11318989710009, 91.34705332086061, 91.58091674462115, 91.81478016838166, 92.04864359214218, 92.28250701590271, 92.51637043966323, 92.75023386342376, 92.98409728718428, 93.21796071094481, 93.45182413470533, 93.68568755846586, 93.91955098222638, 94.15341440598691, 94.38727782974743, 94.62114125350796, 94.85500467726847, 95.08886810102901, 95.32273152478953, 95.55659494855004, 95.79045837231057, 96.02432179607109, 96.25818521983162, 96.44527595884004, 96.63236669784845, 96.81945743685687, 97.00654817586529, 97.19363891487372, 97.38072965388214, 97.56782039289055, 97.75491113189896, 97.94200187090739, 98.12909260991582, 98.31618334892423, 98.50327408793265, 98.69036482694106, 98.87745556594949, 99.0645463049579, 99.25163704396633, 99.43872778297475, 99.62581852198316, 99.81290926099157, 100.0], "top10_pie": {"labels": ["Lai, Ivan", "Chien, Fengsheng", "Lee, Chien-Chiang", "Chau, Ka Yin", "LI, Xi", "Aw, Eugene", "Luo, Jian Ming", "Cheung, Adrian (Waikong)", "Lin, Boqiang", "Shen, Huawen", "Others"], "values": [85.0, 57.0, 57.0, 52.0, 45.0, 44.0, 38.0, 36.0, 34.0, 33.0, 1657.0]}, "teachers_by_college": {"labels": ["数据科学学院", "商学院", "金融学院", "国际旅游与管理学院", "教育学院", "人文社会科学学院", "创新设计学院", "城市与可持续发展研究院", "葡语国家研究院"], "values": [37, 26, 16, 16, 13, 12, 9, 6, 2]}}, "final": {"overview_counts": {"labels": ["教师总数", "有WOS链接", "无WOS链接", "Top 200研究者", "验证研究者"], "values": [338, 137, 201, 200, 518]}, "wos_coverage_pie": {"labels": ["有WOS链接", "无WOS链接"], "values": [137, 201]}, "faculty_distribution": {"labels": ["教育学院", "数据科学学院", "商学院", "金融学院", "国际旅游与管理学院", "人文社会科学学院", "创新设计学院", "城市与可持续发展研究院", "法学院", "葡语国家研究院"], "values": [66, 59, 49, 43, 37, 36, 24, 8, 8, 8]}, "faculty_coverage": {"labels": ["城市与可持续发展研究院", "数据科学学院", "商学院", "国际旅游与管理学院", "创新设计学院", "金融学院", "人文社会科学学院", "葡语国家研究院", "教育学院", "法学院"], "values": [75.0, 62.71186440677966, 53.06122448979592, 43.24324324324324, 37.5, 37.2093023255814, 33.33333333333333, 25.0, 19.696969696969695, 0.0], "meta": [{"with_wos": 6, "total": 8}, {"with_wos": 37, "total": 59}, {"with_wos": 26, "total": 49}, {"with_wos": 16, "total": 37}, {"with_wos": 9, "total": 24}, {"with_wos": 16, "total": 43}, {"with_wos": 12, "total": 36}, {"with_wos": 2, "total": 8}, {"with_wos": 13, "total": 66}, {"with_wos": 0, "total": 8}]}}};
+
+    const BASE_LAYOUT = {{
+      margin: {{l: 60, r: 20, t: 28, b: 48}},
+      paper_bgcolor: "#FFFFFF",
+      plot_bgcolor: "#FFFFFF",
+      font: {{family: "Noto Sans SC, Microsoft YaHei, Arial, sans-serif", color: "#101828", size: 12}},
+      xaxis: {{gridcolor: "#EAECF0", zeroline: false}},
+      yaxis: {{gridcolor: "#EAECF0", zeroline: false}},
+      showlegend: false,
+    }};
+
+    const CONFIG = {{
+      responsive: true,
+      displayModeBar: false,
+    }};
+
+    function barh(el, labels, values, color, extraHover) {{
+      const y = [...labels].reverse();
+      const x = [...values].reverse();
+      const hover = y.map((lab, i) => {{
+        const base = `<b>${{lab}}</b><br>Count: ${{x[i]}}`;
+        const extra = extraHover ? `<br>${{extraHover(i)}}` : "";
+        return base + extra + "<extra></extra>";
+      }});
+      Plotly.newPlot(el, [{{
+        type: "bar",
+        orientation: "h",
+        y,
+        x,
+        marker: {{color}},
+        hovertemplate: hover,
+      }}], {{
+        ...BASE_LAYOUT,
+        margin: {{l: 200, r: 20, t: 28, b: 48}},
+      }}, CONFIG);
+    }}
+
+    function line(el, x, y, color) {{
+      Plotly.newPlot(el, [{{
+        type: "scatter",
+        mode: "lines+markers",
+        x, y,
+        line: {{color, width: 2}},
+        marker: {{color, size: 6}},
+        hovertemplate: "Year: %{x}<br>Count: %{y}<extra></extra>",
+      }}], {{
+        ...BASE_LAYOUT,
+        xaxis: {{...BASE_LAYOUT.xaxis, tickangle: -45}},
+      }}, CONFIG);
+    }}
+
+    function bars(el, labels, values, color) {{
+      Plotly.newPlot(el, [{{
+        type: "bar",
+        x: labels,
+        y: values,
+        marker: {{color}},
+        hovertemplate: "<b>%{x}</b><br>Count: %{y}<extra></extra>",
+      }}], {{
+        ...BASE_LAYOUT,
+        xaxis: {{...BASE_LAYOUT.xaxis, tickangle: -30}},
+      }}, CONFIG);
+    }}
+
+    function hist(el, values, color) {{
+      Plotly.newPlot(el, [{{
+        type: "histogram",
+        x: values,
+        marker: {{color}},
+        opacity: 0.85,
+        hovertemplate: "Publications: %{x}<br>Bin count: %{y}<extra></extra>",
+      }}], {{
+        ...BASE_LAYOUT,
+        xaxis: {{...BASE_LAYOUT.xaxis, title: "Publications"}},
+        yaxis: {{...BASE_LAYOUT.yaxis, title: "Authors"}},
+      }}, CONFIG);
+    }}
+
+    function pie(el, labels, values, colors) {{
+      Plotly.newPlot(el, [{{
+        type: "pie",
+        labels,
+        values,
+        marker: {{colors}},
+        textinfo: "none",
+        hovertemplate: "<b>%{label}</b><br>%{value} (%{percent})<extra></extra>",
+      }}], {{
+        ...BASE_LAYOUT,
+        margin: {{l: 20, r: 20, t: 28, b: 20}},
+        showlegend: true,
+        legend: {{orientation: "v"}},
+      }}, CONFIG);
+    }}
+
+    function cumulative(el, pct, color) {{
+      const x = Array.from({{length: pct.length}}, (_, i) => i + 1);
+      Plotly.newPlot(el, [{{
+        type: "scatter",
+        mode: "lines",
+        x,
+        y: pct,
+        line: {{color, width: 2}},
+        fill: "tozeroy",
+        fillcolor: "rgba(204,121,167,0.18)",
+        hovertemplate: "Rank: %{x}<br>Cumulative: %{y:.1f}%<extra></extra>",
+      }}], {{
+        ...BASE_LAYOUT,
+        yaxis: {{...BASE_LAYOUT.yaxis, range: [0, 100], ticksuffix: "%"}},
+      }}, CONFIG);
+    }}
+
+    function render() {{
+      line("wos_year", DATA.wos.publications_by_year.x, DATA.wos.publications_by_year.y, "#0072B2");
+      barh("wos_areas", DATA.wos.research_areas_top15.labels, DATA.wos.research_areas_top15.values, "#009E73");
+      barh("wos_countries", DATA.wos.countries_top15.labels, DATA.wos.countries_top15.values, "#56B4E9");
+      barh("wos_affil", DATA.wos.affiliations_top15.labels, DATA.wos.affiliations_top15.values, "#CC79A7");
+      bars("wos_doc", DATA.wos.document_types.labels, DATA.wos.document_types.values, "#E69F00");
+      barh("wos_publishers", DATA.wos.publishers_top15.labels, DATA.wos.publishers_top15.values, "#0072B2");
+      barh("wos_categories", DATA.wos.wos_categories_top15.labels, DATA.wos.wos_categories_top15.values, "#009E73");
+
+      barh("a_top20", DATA.authors.top20.labels, DATA.authors.top20.values, "#0072B2");
+      hist("a_hist", DATA.authors.hist_values, "#56B4E9");
+      cumulative("a_cum", DATA.authors.cumulative_pct, "#CC79A7");
+      pie("a_pie", DATA.authors.top10_pie.labels, DATA.authors.top10_pie.values,
+        ["#0072B2","#E69F00","#009E73","#56B4E9","#CC79A7","#D55E00","#999999","#F0E442","#0072B2","#009E73","#98A2B3"]
+      );
+      barh("a_college", DATA.authors.teachers_by_college.labels, DATA.authors.teachers_by_college.values, "#009E73");
+
+      bars("f_overview", DATA.final.overview_counts.labels, DATA.final.overview_counts.values, "#0072B2");
+      pie("f_coverage_pie", DATA.final.wos_coverage_pie.labels, DATA.final.wos_coverage_pie.values, ["#009E73","#E69F00"]);
+      barh("f_faculty_dist", DATA.final.faculty_distribution.labels, DATA.final.faculty_distribution.values, "#56B4E9");
+      barh("f_faculty_cov", DATA.final.faculty_coverage.labels, DATA.final.faculty_coverage.values, "#009E73",
+        (i) => {{
+          const m = DATA.final.faculty_coverage.meta.slice().reverse()[i];
+          return `withWOS/total: ${{m.with_wos}}/${{m.total}}`;
+        }}
+      );
+    }}
+
+    window.addEventListener("load", render);
+  </script>
+</body>
+</html>
