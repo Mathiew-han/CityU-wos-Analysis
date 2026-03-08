@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>数据更正说明</title>
+  <style>
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; margin: 24px; color: #101828; background: #F9FAFB; }
+    .wrap { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid #D0D5DD; padding: 18px 18px; }
+    a { color: #101828; }
+    pre { white-space: pre-wrap; line-height: 18px; font-size: 12px; color: #101828; }
+    .muted { color: #475467; font-size: 13px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="./index.html">← 返回入口</a>
+    <h1>数据更正说明</h1>
+    <p class="muted">来源：数据更正说明.md / 数据更正说明 - 副本.md</p>
+    <pre># 📋 數據更正說明
+
+## 🔄 更正內容
+
+### 問題描述
+之前的報告中存在數據混淆問題：
+- **錯誤數據源**: 使用了"作者TOP500.xlsx"作為論文發表數量統計
+- **實際情況**: 該文件統計的是擁有WOS賬號的研究人員數量，而非論文發表數量
+- **錯誤示例**: 顯示"Gu, JIA (10篇)"為發表最多的作者
+
+### 正確數據源
+- **文件名**: 发表论文的研究人员Top200.xlsx
+- **數據內容**: 研究人員實際發表的論文數量
+- **正確數據**: 朱天清（139篇）為發表最多的研究人員
+
+---
+
+## ✅ 已更正的內容
+
+### 1. 數據處理腳本
+**文件**: generate_complete_data.py
+
+**更正內容**:
+- ❌ 移除：讀取"作者TOP500.xlsx"的代碼
+- ✅ 保留：只使用"发表论文的研究人员Top200.xlsx"
+- ✅ 更新：所有統計數據基於正確的數據源
+
+### 2. HTML報告
+**文件**: 科研数据完整分析报告.html
+
+**更正內容**:
+- ❌ 移除：整個"作者統計分析"板塊（3個圖表）
+- ✅ 保留：研究人員分析板塊（4個圖表）
+- ✅ 更新：統計卡片顯示正確的發表最多研究人員
+- ✅ 調整：從14個圖表減少到12個圖表（移除錯誤的作者分析）
+
+### 3. 導航菜單
+**更正內容**:
+- ❌ 移除："作者"導航鏈接
+- ✅ 保留：研究人員、出版商、研究領域
+
+### 4. 統計數據
+**更正前**:
+發表最多的作者: Gu, JIA (10篇)  ❌ 錯誤
+
+**更正後**:
+發表最多的研究人員: 朱天清 (139篇)  ✅ 正確
+
+---
+
+## 📊 正確的Top 10研究人員
+
+根據"发表论文的研究人员Top200.xlsx"：
+
+| 排名 | 研究人員 | 論文數量 |
+|------|----------|----------|
+| 1 | 朱天清 | 139篇 |
+| 2 | Ding, Weiping | 123篇 |
+| 3 | Lai, Ivan | 100篇 |
+| 4 | Chau, Ka Yin | 89篇 |
+| 5 | Wanlei Zhou | 87篇 |
+| 6 | Chien, Fengsheng | 82篇 |
+| 7 | Lee, Chien-Chiang | 78篇 |
+| 8 | Lin, Boqiang | 75篇 |
+| 9 | Zuobin Ying | 62篇 |
+| 10 | Luo, Jian Ming | 57篇
+    </pre>
+  </div>
+</body>
+</html>
